@@ -1,6 +1,3 @@
-app.get("/", (req, res) => {
-  res.send("StudyVerse API is running");
-});
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -16,7 +13,9 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json());
-
+app.get("/", (req, res) => {
+  res.send("Backend is running properly");
+});
 // Routes
 app.use("/api/auth", authRoutes);
 
