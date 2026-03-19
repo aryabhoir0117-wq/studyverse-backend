@@ -82,10 +82,11 @@ exports.registerUser = async (req, res) => {
       rank: user.rank,
       token: generateToken(user._id)
     });
-
-  } catch (error) {
+} catch (error) {
+    console.error("REGISTER ERROR:", error);
     res.status(500).json({ message: error.message });
-  }
+}
+ 
 };
 
 exports.loginUser = async (req, res) => {
@@ -111,9 +112,8 @@ exports.loginUser = async (req, res) => {
       rank: user.rank,
       token: generateToken(user._id)
     });
-
-  } catch (error) {
-    console.error("REGISTER ERROR:", error);
+   } catch (error) {
     res.status(500).json({ message: error.message });
-}
+  }
+  
 };
