@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const notesSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true
+  },
   subject: {
     type: String,
     required: true
@@ -10,6 +14,10 @@ const notesSchema = new mongoose.Schema({
     default: ""
   },
   pdfUrl: {
+    type: String,
+    default: ""
+  },
+  date: {
     type: String,
     default: ""
   },
