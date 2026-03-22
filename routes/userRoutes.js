@@ -23,6 +23,21 @@ function calculateRank(xp) {
 router.get("/profile", protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
+
+    const today = new Date().toDateString();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (user.lastStudyDate !== today) {
+      if (user.lastStudyDate === yesterday.toDateString()) {
+        user.streak += 1;
+      } else {
+        user.streak = 1;
+      }
+      user.lastStudyDate = today;
+      await user.save();
+    }
+
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
