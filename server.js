@@ -8,6 +8,7 @@ const notesRoutes = require("./routes/notesRoutes");
 const app = express();
 const aiRoutes = require("./routes/aiRoutes");
 const lessonAIRoutes = require("./routes/lessonAIRoutes");
+const lessonRoutes = require("./routes/lessonRoutes");
 
 // Connect Database
 connectDB();
@@ -24,6 +25,8 @@ app.use("/api/user", userRoutes);
 app.use("/api/notes", notesRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/lesson-ai", lessonAIRoutes);
+app.use("/api/lessons", lessonRoutes);
+
 // Server
 // const PORT = process.env.PORT || 5000;
 
