@@ -4,7 +4,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
-
+const notesRoutes = require("./routes/notesRoutes");
 const app = express();
 
 // Connect Database
@@ -19,6 +19,7 @@ app.get("/", (req, res) => {
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/notes", notesRoutes);
 // Server
 // const PORT = process.env.PORT || 5000;
 
