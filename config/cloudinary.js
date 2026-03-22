@@ -13,7 +13,8 @@ const storage = new CloudinaryStorage({
   params: {
     folder: "studyverse-notes",
     allowed_formats: ["pdf"],
-    resource_type: "raw"
+    resource_type: "raw",
+    flags: "attachment:false"
   }
 });
 
