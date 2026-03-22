@@ -7,7 +7,11 @@ const notesSchema = new mongoose.Schema({
   },
   content: {
     type: String,
-    required: true
+    default: ""
+  },
+  pdfUrl: {
+    type: String,
+    default: ""
   },
   teacherId: {
     type: mongoose.Schema.Types.ObjectId,
