@@ -36,6 +36,7 @@ router.post("/chat", protect, async (req, res) => {
     }
 
   } catch (error) {
+    console.error("AI ROUTE ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 });
