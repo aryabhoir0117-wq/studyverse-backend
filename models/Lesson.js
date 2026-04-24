@@ -17,6 +17,12 @@ const lessonSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  // NEW: difficulty tier for adaptive questioning
+  difficulty: {
+    type: String,
+    enum: ["basic", "intermediate", "advanced"],
+    default: "intermediate"
+  },
   teacherId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"

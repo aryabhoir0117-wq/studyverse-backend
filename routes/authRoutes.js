@@ -1,7 +1,7 @@
-// ─────────────────────────────────────────────────────────────
+// 
 // ADD THIS TO: routes/authRoutes.js
 // npm install google-auth-library   (run this once in your backend)
-// ─────────────────────────────────────────────────────────────
+// 
 
 const express = require("express");
 const router = express.Router();
