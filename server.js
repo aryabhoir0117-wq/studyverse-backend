@@ -1,40 +1,62 @@
 require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
+const express   = require("express");
+const cors      = require("cors");
+const helmet    = require("helmet");
+const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
-const userRoutes = require("./routes/userRoutes");
-const authRoutes = require("./routes/authRoutes");
-const notesRoutes = require("./routes/notesRoutes");
-const app = express();
-const aiRoutes = require("./routes/aiRoutes");
-const lessonAIRoutes = require("./routes/lessonAIRoutes");
-const lessonRoutes = require("./routes/lessonRoutes");
 
-// Connect Database
 connectDB();
 
-// Middleware
+const app = express();
+
+// ── security ──────────────────────────────────────────────────────────────
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
-app.get("/", (req, res) => {
-  res.send("Backend is running properly");
+
+// ── rate limiting ──────────────────────────────────────────────────────────
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 20,
+  message: { message: "Too many login attempts. Try again in 15 minutes." }
 });
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/notes", notesRoutes);
-app.use("/api/ai", aiRoutes);
-app.use("/api/lesson-ai", lessonAIRoutes);
-app.use("/api/lessons", lessonRoutes);
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  message: { message: "Too many requests. Slow down." }
+});
 
-// Server
-// const PORT = process.env.PORT || 5000;
+app.use("/api/auth", authLimiter);
+app.use("/api/",     apiLimiter);
 
-// app.listen(PORT, () => {
-//   console.log(`Server running on port ${PORT}`);
-// });
+// ── health ────────────────────────────────────────────────────────────────
+app.get("/", (req, res) => res.send("StudyVerse backend running"));
+
+// ── routes ────────────────────────────────────────────────────────────────
+app.use("/api/auth",        require("./routes/authRoutes"));
+app.use("/api/user",        require("./routes/userRoutes"));
+app.use("/api/notes",       require("./routes/notesRoutes"));
+app.use("/api/ai",          require("./routes/aiRoutes"));
+app.use("/api/lesson-ai",   require("./routes/lessonAIRoutes"));
+app.use("/api/lessons",     require("./routes/lessonRoutes"));
+app.use("/api/admin",       require("./routes/adminRoutes"));       // school admin
+app.use("/api/superadmin",  require("./routes/superAdminRoutes"));  // StudyVerse company
+
+// ── start ─────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
+app.get("/api/seed", async (req, res) => {
+  const User = require("./models/User");
+  const existing = await User.findOne({ role: "superadmin" });
+  if (existing) return res.json({ message: "Superadmin already exists: " + existing.email });
+  
+  await User.create({
+    username: "studyverse_superadmin",
+    email: process.env.SUPERADMIN_EMAIL,
+    password: process.env.SUPERADMIN_PASSWORD,
+    role: "superadmin",
+    isFirstLogin: false,
+    isActive: true
+  });
+  res.json({ message: "Superadmin created" });
 });
