@@ -45,18 +45,3 @@ app.use("/api/superadmin",  require("./routes/superAdminRoutes"));  // StudyVers
 // ── start ─────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
-app.get("/api/seed", async (req, res) => {
-  const User = require("./models/User");
-  const existing = await User.findOne({ role: "superadmin" });
-  if (existing) return res.json({ message: "Superadmin already exists: " + existing.email });
-  
-  await User.create({
-    username: "studyverse_superadmin",
-    email: process.env.SUPERADMIN_EMAIL,
-    password: process.env.SUPERADMIN_PASSWORD,
-    role: "superadmin",
-    isFirstLogin: false,
-    isActive: true
-  });
-  res.json({ message: "Superadmin created" });
-});
