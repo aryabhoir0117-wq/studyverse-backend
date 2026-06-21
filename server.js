@@ -41,7 +41,8 @@ app.use("/api/lesson-ai",   require("./routes/lessonAIRoutes"));
 app.use("/api/lessons",     require("./routes/lessonRoutes"));
 app.use("/api/admin",       require("./routes/adminRoutes"));       // school admin
 app.use("/api/superadmin",  require("./routes/superAdminRoutes"));  // StudyVerse company
-
+app.use("/api/teacher", require("./routes/teacherRoutes"));
+app.use("/api/gk",      require("./routes/gkQuizRoutes"));
 // ── start ─────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));

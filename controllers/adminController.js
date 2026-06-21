@@ -85,26 +85,31 @@ exports.createStudent = async (req, res) => {
 // ── CREATE TEACHER ────────────────────────────────────────────────────────
 exports.createTeacher = async (req, res) => {
   try {
-    const { username, email, subjectsAssigned } = req.body;
+    const { username, email, assignments } = req.body;
+    // assignments = [{ classId, sectionId, subjects: ["Maths","Science"] }, ...]
+ 
     if (!username || !email)
       return res.status(400).json({ message: "Username and email required" });
-
+ 
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: "Email already registered" });
-
+ 
     const tempPassword = genTempPassword();
-
+ 
     const user = await User.create({
       username, email, password: tempPassword,
       role: "teacher", schoolId: req.user.schoolId, isFirstLogin: true
     });
-
+ 
     const employeeId = await genEmployeeId(req.user.schoolId);
+ 
     const profile = await TeacherProfile.create({
-      userId: user._id, schoolId: req.user.schoolId,
-      employeeId, subjectsAssigned: subjectsAssigned || []
+      userId:      user._id,
+      schoolId:    req.user.schoolId,
+      employeeId,
+      assignments: assignments || []
     });
-
+ 
     res.status(201).json({
       message: "Teacher created",
       user: { _id: user._id, username, email, role: "teacher" },
@@ -198,21 +203,40 @@ exports.assignStudent = async (req, res) => {
 };
 
 // ── ASSIGN SUBJECTS TO TEACHER ────────────────────────────────────────────
-exports.assignSubjects = async (req, res) => {
+// exports.assignSubjects = async (req, res) => {
+//   try {
+//     const { subjectsAssigned } = req.body;
+//     const profile = await TeacherProfile.findOneAndUpdate(
+//       { userId: req.params.userId },
+//       { subjectsAssigned: subjectsAssigned || [] },
+//       { new: true }
+//     );
+//     if (!profile) return res.status(404).json({ message: "Teacher profile not found" });
+//     res.json({ message: "Subjects updated", profile });
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+// Add or update assignments for an existing teacher
+exports.updateTeacherAssignments = async (req, res) => {
   try {
-    const { subjectsAssigned } = req.body;
+    const { assignments } = req.body;
+    // assignments = [{ classId, sectionId, subjects: [] }]
+ 
     const profile = await TeacherProfile.findOneAndUpdate(
       { userId: req.params.userId },
-      { subjectsAssigned: subjectsAssigned || [] },
+      { assignments },
       { new: true }
     );
     if (!profile) return res.status(404).json({ message: "Teacher profile not found" });
-    res.json({ message: "Subjects updated", profile });
+ 
+    res.json({ message: "Assignments updated", profile });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
+ 
 // ── CLASSES ───────────────────────────────────────────────────────────────
 exports.getClasses = async (req, res) => {
   try {

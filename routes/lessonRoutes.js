@@ -1,65 +1,99 @@
-const express = require("express");
-const router = express.Router();
-const { protect } = require("../middleware/authMiddleware");
-const Lesson = require("../models/Lesson");
+const express  = require("express");
+const router   = express.Router();
+const { protect, requireRole } = require("../middleware/authMiddleware");
+const Lesson   = require("../models/Lesson");
+const TeacherProfile = require("../models/TeacherProfile");
 
-// Teacher saves a lesson
-router.post("/save", protect, async (req, res) => {
+// ── TEACHER: save lesson (tagged to active class/section/subject) ──────────
+router.post("/save", protect, requireRole("teacher"), async (req, res) => {
   try {
-    if (req.user.role !== "teacher") {
-      return res.status(403).json({ message: "Only teachers can save lessons" });
-    }
+    const { classId, sectionId, subject, question, options, answer } = req.body;
 
-    const { subject, question, options, answer } = req.body;
-
-    if (!question || !options || options.length !== 4) {
+    if (!classId || !sectionId || !subject || !question || !options || options.length !== 4)
       return res.status(400).json({ message: "All fields required" });
-    }
+
+    // Verify teacher is assigned to this class+section+subject
+    const profile = await TeacherProfile.findOne({ userId: req.user._id });
+    if (!profile) return res.status(403).json({ message: "Teacher profile not found" });
+
+    const assigned = profile.assignments.find(
+      a => String(a.classId) === classId &&
+           String(a.sectionId) === sectionId &&
+           a.subjects.includes(subject)
+    );
+    if (!assigned)
+      return res.status(403).json({ message: "You are not assigned to this class/section/subject" });
 
     const lesson = await Lesson.create({
-      subject,
-      question,
-      options,
-      answer,
-      teacherId: req.user._id
+      schoolId:  req.user.schoolId,
+      teacherId: req.user._id,
+      classId, sectionId, subject,
+      question, options, answer
     });
 
-    res.json({ message: "Lesson saved successfully", lesson });
-
+    res.json({ message: "Lesson saved", lesson });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get all lessons by subject
-router.get("/:subject", protect, async (req, res) => {
+// ── TEACHER: get all their own lessons ────────────────────────────────────
+router.get("/my/lessons", protect, requireRole("teacher"), async (req, res) => {
   try {
-    const lessons = await Lesson.find({ subject: req.params.subject });
+    const filter = { teacherId: req.user._id };
+    if (req.query.classId)   filter.classId   = req.query.classId;
+    if (req.query.sectionId) filter.sectionId = req.query.sectionId;
+    if (req.query.subject)   filter.subject   = req.query.subject;
+
+    const lessons = await Lesson.find(filter).sort({ createdAt: -1 });
     res.json(lessons);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Teacher gets all their lessons
-router.get("/my/lessons", protect, async (req, res) => {
+// ── STUDENT: get lessons for their class+section+subject ──────────────────
+router.get("/student", protect, requireRole("student"), async (req, res) => {
   try {
-    if (req.user.role !== "teacher") {
-      return res.status(403).json({ message: "Only teachers can view their lessons" });
-    }
-    const lessons = await Lesson.find({ teacherId: req.user._id }).sort({ createdAt: -1 });
+    const StudentProfile = require("../models/StudentProfile");
+    const profile = await StudentProfile.findOne({ userId: req.user._id });
+    if (!profile) return res.status(404).json({ message: "Student profile not found" });
+
+    const filter = {
+      schoolId:  req.user.schoolId,
+      classId:   profile.classId,
+      sectionId: profile.sectionId
+    };
+    if (req.query.subject) filter.subject = req.query.subject;
+
+    const lessons = await Lesson.find(filter).sort({ createdAt: -1 });
     res.json(lessons);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Teacher deletes a lesson
-router.delete("/:id", protect, async (req, res) => {
+// ── STUDENT: get subjects available for their class+section ───────────────
+router.get("/my-subjects", protect, requireRole("student"), async (req, res) => {
   try {
-    if (req.user.role !== "teacher") {
-      return res.status(403).json({ message: "Only teachers can delete lessons" });
-    }
+    const StudentProfile = require("../models/StudentProfile");
+    const profile = await StudentProfile.findOne({ userId: req.user._id });
+    if (!profile) return res.status(404).json({ message: "Student profile not found" });
+
+    const subjects = await Lesson.distinct("subject", {
+      schoolId:  req.user.schoolId,
+      classId:   profile.classId,
+      sectionId: profile.sectionId
+    });
+    res.json(subjects);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// ── TEACHER: delete own lesson ────────────────────────────────────────────
+router.delete("/:id", protect, requireRole("teacher"), async (req, res) => {
+  try {
     await Lesson.findOneAndDelete({ _id: req.params.id, teacherId: req.user._id });
     res.json({ message: "Lesson deleted" });
   } catch (error) {
