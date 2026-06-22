@@ -52,7 +52,7 @@ Return ONLY valid JSON, no markdown, no backticks:
 {
   "headlines": [
     {
-      "title": "Short punchy rewritten headline (max 10 words)",
+      "title": "Short punchy rewritten headline keep the context same (max 20 words)",
       "brief": "2-3 sentence fun summary a 12-year-old would enjoy reading",
       "emoji": "relevant emoji"
     }
