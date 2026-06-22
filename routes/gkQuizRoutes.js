@@ -2,8 +2,7 @@ const express = require("express");
 const router  = express.Router();
 const { protect, requireRole } = require("../middleware/authMiddleware");
 const GKQuiz  = require("../models/GKQuiz");
-const Groq    = require("groq-sdk");
-
+const Groq = require("groq");
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // ── generate today's quiz (called by cron or manually) ───────────────────
