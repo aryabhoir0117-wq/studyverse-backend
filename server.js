@@ -8,12 +8,13 @@ const connectDB = require("./config/db");
 connectDB();
 
 const app = express();
+app.set("trust proxy", 1);
 
 // ── security ──────────────────────────────────────────────────────────────
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-
+app.set("trust proxy", 1);
 // ── rate limiting ──────────────────────────────────────────────────────────
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
@@ -43,6 +44,8 @@ app.use("/api/admin",       require("./routes/adminRoutes"));       // school ad
 app.use("/api/superadmin",  require("./routes/superAdminRoutes"));  // StudyVerse company
 app.use("/api/teacher", require("./routes/teacherRoutes"));
 app.use("/api/gk",      require("./routes/gkQuizRoutes"));
+
+
 // ── start ─────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));

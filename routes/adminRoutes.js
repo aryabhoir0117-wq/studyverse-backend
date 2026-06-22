@@ -5,28 +5,28 @@ const admin = require("../controllers/adminController");
 
 const guard = [protect, requireRole("admin", "superadmin")];
 
-// users
-router.get   ("/users",                   ...guard, admin.getUsers);
-router.post  ("/create-student",          ...guard, admin.createStudent);
-router.post  ("/create-teacher",          ...guard, admin.createTeacher);
-router.patch ("/block/:userId",           ...guard, admin.blockUser);
-router.patch ("/unblock/:userId",         ...guard, admin.unblockUser);
-router.patch ("/reset-password/:userId",  ...guard, admin.resetPassword);
-router.delete("/deactivate/:userId",      ...guard, admin.deactivateUser);
-router.patch ("/assign-student/:userId",  ...guard, admin.assignStudent);
-router.patch ("/assign-subjects/:userId", ...guard, admin.assignSubjects);
+// ── users ─────────────────────────────────────────────────────────────────
+router.get   ("/users",                          ...guard, admin.getUsers);
+router.post  ("/create-student",                 ...guard, admin.createStudent);
+router.post  ("/create-teacher",                 ...guard, admin.createTeacher);
+router.patch ("/block/:userId",                  ...guard, admin.blockUser);
+router.patch ("/unblock/:userId",                ...guard, admin.unblockUser);
+router.patch ("/reset-password/:userId",         ...guard, admin.resetPassword);
+router.delete("/deactivate/:userId",             ...guard, admin.deactivateUser);
+router.patch ("/assign-student/:userId",         ...guard, admin.assignStudent);
+router.patch ("/assign-teacher/:userId",         ...guard, admin.updateTeacherAssignments);
 
-// classes
+// ── classes ───────────────────────────────────────────────────────────────
 router.get   ("/classes",      ...guard, admin.getClasses);
 router.post  ("/classes",      ...guard, admin.createClass);
 router.delete("/classes/:id",  ...guard, admin.deleteClass);
 
-// sections
+// ── sections ──────────────────────────────────────────────────────────────
 router.get   ("/sections",     ...guard, admin.getSections);
 router.post  ("/sections",     ...guard, admin.createSection);
 router.delete("/sections/:id", ...guard, admin.deleteSection);
 
-// analytics
+// ── analytics ─────────────────────────────────────────────────────────────
 router.get("/analytics",       ...guard, admin.getAnalytics);
 
 module.exports = router;
