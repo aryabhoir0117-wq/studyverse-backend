@@ -51,7 +51,7 @@ Return ONLY valid JSON, no markdown, no backticks:
 {
   "headlines": [
     {
-      "title": "Short punchy rewritten headline keep the context same (max 20 words)",
+      "title": "Short punchy rewritten headline keep the context same don't use asterrisk (max 20 words)",
       "brief": "2-3 sentence fun summary a 12-year-old would enjoy reading",
       "emoji": "relevant emoji"
     }
@@ -72,13 +72,19 @@ Generate 10 headlines and exactly 5 questions. Keep language simple and fun.
   const completion = await groq.chat.completions.create({
     model: "llama-3.1-8b-instant",
     messages: [{ role: "user", content: prompt }],
+    response_format: { type: "json_object" },
     temperature: 0.7,
     max_tokens: 2000
   });
 
-  const raw  = completion.choices[0].message.content.trim();
-  const json = JSON.parse(raw);
+let raw = completion.choices[0].message.content.trim();
 
+raw = raw
+  .replace(/```json/g, "")
+  .replace(/```/g, "")
+  .trim();
+
+const json = JSON.parse(raw);
   const quiz = await GKQuiz.create({
     date: today,
     headlines: json.headlines,
