@@ -4,34 +4,52 @@ const { protect, requireRole } = require("../middleware/authMiddleware");
 const Lesson   = require("../models/Lesson");
 const TeacherProfile = require("../models/TeacherProfile");
 
-// ── TEACHER: save lesson (tagged to active class/section/subject) ──────────
+// ── TEACHER: save lesson (single OR multi-section broadcast) ───────────────
+// Body: { classId, sectionIds: ["id1","id2"] OR sectionId: "id", subject, question, options, answer }
 router.post("/save", protect, requireRole("teacher"), async (req, res) => {
   try {
-    const { classId, sectionId, subject, question, options, answer } = req.body;
+    const { classId, sectionId, sectionIds, subject, question, options, answer } = req.body;
 
-    if (!classId || !sectionId || !subject || !question || !options || options.length !== 4)
-      return res.status(400).json({ message: "All fields required" });
+    // Resolve target sections — support both single and array
+    const targetSections = sectionIds && sectionIds.length
+      ? sectionIds
+      : sectionId
+        ? [sectionId]
+        : [];
 
-    // Verify teacher is assigned to this class+section+subject
+    if (!classId || !targetSections.length || !subject || !question || !options || options.length !== 4) {
+      return res.status(400).json({ message: "classId, at least one sectionId, subject, question, and 4 options are required" });
+    }
+
+    // Verify teacher is assigned to this class + each target section + subject
     const profile = await TeacherProfile.findOne({ userId: req.user._id });
     if (!profile) return res.status(403).json({ message: "Teacher profile not found" });
 
-    const assigned = profile.assignments.find(
-      a => String(a.classId) === classId &&
-           String(a.sectionId) === sectionId &&
-           a.subjects.includes(subject)
+    const unauthorised = targetSections.filter(sid =>
+      !profile.assignments.find(
+        a => String(a.classId) === classId &&
+             String(a.sectionId) === sid &&
+             a.subjects.includes(subject)
+      )
     );
-    if (!assigned)
-      return res.status(403).json({ message: "You are not assigned to this class/section/subject" });
+    if (unauthorised.length) {
+      return res.status(403).json({ message: "Not assigned to all selected sections for this subject" });
+    }
 
-    const lesson = await Lesson.create({
+    // Create one lesson doc per target section
+    const docs = targetSections.map(sid => ({
       schoolId:  req.user.schoolId,
       teacherId: req.user._id,
-      classId, sectionId, subject,
-      question, options, answer
-    });
+      classId,
+      sectionId: sid,
+      subject,
+      question,
+      options,
+      answer
+    }));
 
-    res.json({ message: "Lesson saved", lesson });
+    const lessons = await Lesson.insertMany(docs);
+    res.json({ message: `Lesson broadcast to ${lessons.length} section(s)`, lessons });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -45,7 +63,10 @@ router.get("/my/lessons", protect, requireRole("teacher"), async (req, res) => {
     if (req.query.sectionId) filter.sectionId = req.query.sectionId;
     if (req.query.subject)   filter.subject   = req.query.subject;
 
-    const lessons = await Lesson.find(filter).sort({ createdAt: -1 });
+    const lessons = await Lesson.find(filter)
+      .populate("classId",   "className")
+      .populate("sectionId", "sectionName")
+      .sort({ createdAt: -1 });
     res.json(lessons);
   } catch (error) {
     res.status(500).json({ message: error.message });
