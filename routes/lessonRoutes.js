@@ -36,17 +36,17 @@ router.post("/save", protect, requireRole("teacher"), async (req, res) => {
       return res.status(403).json({ message: "Not assigned to all selected sections for this subject" });
     }
 
-    // Create one lesson doc per target section
-    const docs = targetSections.map(sid => ({
-      schoolId:  req.user.schoolId,
-      teacherId: req.user._id,
-      classId,
-      sectionId: sid,
-      subject,
-      question,
-      options,
-      answer
-    }));
+    // // Create one lesson doc per target section
+    // const docs = targetSections.map(sid => ({
+    //   schoolId:  req.user.schoolId,
+    //   teacherId: req.user._id,
+    //   classId,
+    //   sectionId: sid,
+    //   subject,
+    //   question,
+    //   options,
+    //   answer
+    // }));
   const explanation = await generateExplanation({ question, options, answer });
 
     const docs = targetSections.map(sid => ({
@@ -60,7 +60,7 @@ router.post("/save", protect, requireRole("teacher"), async (req, res) => {
       answer,
       explanation
     }));
-    
+
     const lessons = await Lesson.insertMany(docs);
     res.json({ message: `Lesson broadcast to ${lessons.length} section(s)`, lessons });
   } catch (error) {
