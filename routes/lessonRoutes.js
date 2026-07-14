@@ -3,7 +3,7 @@ const router   = express.Router();
 const { protect, requireRole } = require("../middleware/authMiddleware");
 const Lesson   = require("../models/Lesson");
 const TeacherProfile = require("../models/TeacherProfile");
-
+const { generateExplanation } = require("./lessonAIRoutes");
 // ── TEACHER: save lesson (single OR multi-section broadcast) ───────────────
 // Body: { classId, sectionIds: ["id1","id2"] OR sectionId: "id", subject, question, options, answer }
 router.post("/save", protect, requireRole("teacher"), async (req, res) => {
@@ -47,7 +47,20 @@ router.post("/save", protect, requireRole("teacher"), async (req, res) => {
       options,
       answer
     }));
+  const explanation = await generateExplanation({ question, options, answer });
 
+    const docs = targetSections.map(sid => ({
+      schoolId:  req.user.schoolId,
+      teacherId: req.user._id,
+      classId,
+      sectionId: sid,
+      subject,
+      question,
+      options,
+      answer,
+      explanation
+    }));
+    
     const lessons = await Lesson.insertMany(docs);
     res.json({ message: `Lesson broadcast to ${lessons.length} section(s)`, lessons });
   } catch (error) {

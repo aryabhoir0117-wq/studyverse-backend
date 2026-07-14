@@ -9,7 +9,7 @@ const notesSchema = new mongoose.Schema({
   title:     { type: String, required: true },
   content:   { type: String, default: "" },
   pdfUrl:    { type: String, default: "" },
-  date:      { type: String, default: "" }
+  date:      { type: String, default: "" },
 }, { timestamps: true });
  
 module.exports = mongoose.model("Notes", notesSchema);
