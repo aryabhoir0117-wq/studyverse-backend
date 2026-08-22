@@ -60,7 +60,7 @@ async function generateExplanation({ question, options, answer }) {
       messages: [
         {
           role: "system",
-          content: "You explain MCQ answers in exactly 1-2 short sentences. Respond ONLY in this exact JSON format with no extra text: {\"explanation\": \"your explanation here\"}. No markdown, no headers."
+          content: "You explain MCQ answers in exactly 2-3 short sentences. Respond ONLY in this exact JSON format with no extra text: {\"explanation\": \"your explanation here\"}. No markdown, no headers."
         },
         {
           role: "user",
