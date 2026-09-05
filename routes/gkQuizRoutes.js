@@ -70,7 +70,7 @@ Generate 10 headlines and exactly 5 questions. Keep language simple and fun.
 `;
 
   const completion = await groq.chat.completions.create({
-    model: "llama-3.1-8b-instant",
+    "model": "openai/gpt-oss-20b",    
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
     temperature: 0.7,
